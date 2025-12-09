@@ -1,0 +1,1554 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Controle Financeiro + Investimentos</title>
+  <style>
+    :root{
+      --bg:#f3f8ff;
+      --card:#fff;
+      --accent:#0366d6;
+      --success:#10b981;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --purple:#8b5cf6;
+      --muted:#6b7280;
+      --border:#e6eef9;
+    }
+    *{box-sizing:border-box;}
+    body{
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin:0;
+      background:var(--bg);
+      color:#0f172a;
+    }
+    header{
+      background:linear-gradient(135deg,#667eea 0%, #764ba2 100%);
+      color:#fff;
+      padding:20px;
+      box-shadow:0 4px 20px rgba(102,126,234,0.3);
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+    .header-content{
+      max-width:1400px;
+      margin:0 auto;
+    }
+    h1{
+      font-size:24px;
+      margin:0 0 8px;
+    }
+    p.lead{
+      margin:0 0 12px;
+      opacity:0.95;
+      font-size:14px;
+    }
+    .status-bar{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .status-indicator{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 12px;
+      border-radius:20px;
+      font-size:12px;
+      font-weight:500;
+      background:rgba(255,255,255,0.2);
+      backdrop-filter:blur(10px);
+    }
+    .status-indicator.online{
+      background:rgba(16,185,129,0.2);
+      border:1px solid rgba(16,185,129,0.3);
+    }
+    .status-indicator.offline{
+      background:rgba(239,68,68,0.2);
+      border:1px solid rgba(239,68,68,0.3);
+    }
+    .status-indicator .dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:#fff;
+      animation:pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%, 100%{ opacity:1; transform:scale(1); }
+      50%{ opacity:0.6; transform:scale(0.9); }
+    }
+    .pending-sync{
+      background:rgba(245,158,11,0.2);
+      border:1px solid rgba(245,158,11,0.3);
+      padding:6px 12px;
+      border-radius:20px;
+      font-size:12px;
+      display:none;
+    }
+    .pending-sync.show{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .tabs{
+      display:flex;
+      gap:8px;
+      margin-top:16px;
+      border-bottom:2px solid rgba(255,255,255,0.2);
+    }
+    .tab{
+      padding:10px 20px;
+      background:transparent;
+      border:none;
+      color:rgba(255,255,255,0.7);
+      cursor:pointer;
+      font-size:14px;
+      font-weight:500;
+      border-radius:8px 8px 0 0;
+      transition:all 0.2s;
+      border-bottom:2px solid transparent;
+      margin-bottom:-2px;
+    }
+    .tab:hover{
+      color:#fff;
+      background:rgba(255,255,255,0.1);
+    }
+    .tab.active{
+      color:#fff;
+      background:rgba(255,255,255,0.15);
+      border-bottom-color:#fff;
+    }
+    .container{
+      max-width:1400px;
+      margin:22px auto;
+      padding:0 20px;
+    }
+    .tab-content{
+      display:none;
+    }
+    .tab-content.active{
+      display:block;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      margin-top:20px;
+    }
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:20px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 6px 20px rgba(12,24,48,0.08);
+    }
+    .card h3{
+      margin:0 0 16px;
+      font-size:18px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    form label{
+      display:block;
+      font-size:13px;
+      font-weight:600;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    input[type=text], input[type=number], select, textarea, input[type=datetime-local], input[type=date]{
+      width:100%;
+      padding:11px 14px;
+      border-radius:8px;
+      border:1.5px solid var(--border);
+      margin-bottom:14px;
+      font-size:14px;
+      transition:all 0.2s;
+      font-family:inherit;
+    }
+    input:focus, select:focus, textarea:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 3px rgba(3,102,214,0.1);
+    }
+    textarea{
+      resize:vertical;
+      min-height:80px;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+    }
+    .row > *{
+      flex:1;
+    }
+    button{
+      background:var(--accent);
+      color:#fff;
+      border:none;
+      padding:11px 18px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:600;
+      transition:all 0.2s;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    button:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 16px rgba(3,102,214,0.3);
+    }
+    button:active{
+      transform:translateY(0);
+    }
+    button.secondary{
+      background:#f1f5f9;
+      color:#0f172a;
+    }
+    button.secondary:hover{
+      background:#e2e8f0;
+      box-shadow:0 6px 16px rgba(15,23,42,0.1);
+    }
+    button.success{
+      background:var(--success);
+    }
+    button.danger{
+      background:var(--danger);
+    }
+    button.purple{
+      background:var(--purple);
+    }
+    button:disabled{
+      opacity:0.5;
+      cursor:not-allowed;
+      transform:none;
+    }
+    button.small{
+      font-size:12px;
+      padding:6px 12px;
+    }
+    .btn-group{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .list{
+      max-height:500px;
+      overflow:auto;
+    }
+    .list::-webkit-scrollbar{
+      width:8px;
+    }
+    .list::-webkit-scrollbar-track{
+      background:#f1f5f9;
+      border-radius:4px;
+    }
+    .list::-webkit-scrollbar-thumb{
+      background:#cbd5e1;
+      border-radius:4px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+    th{
+      padding:12px 10px;
+      text-align:left;
+      border-bottom:2px solid var(--border);
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+      text-transform:uppercase;
+      position:sticky;
+      top:0;
+      background:var(--card);
+      letter-spacing:0.5px;
+    }
+    td{
+      padding:14px 10px;
+      text-align:left;
+      border-bottom:1px solid #f1f5f9;
+      font-size:13px;
+    }
+    tr:hover{
+      background:#f8fafc;
+    }
+    tr.pending-row{
+      background:#fffbeb;
+    }
+    .muted{
+      color:var(--muted);
+    }
+    .actions{
+      display:flex;
+      gap:6px;
+      white-space:nowrap;
+    }
+    .pill{
+      display:inline-block;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:600;
+      white-space:nowrap;
+    }
+    .pill.compra{background:#dbeafe;color:#1e40af;}
+    .pill.pagamento{background:#fee2e2;color:#991b1b;}
+    .pill.recebimento{background:#d1fae5;color:#065f46;}
+    .pill.fii{background:#f3e8ff;color:#6b21a8;}
+    .pill.fiagro{background:#fef3c7;color:#92400e;}
+    .pill.acao{background:#dbeafe;color:#1e40af;}
+    .pill.renda-fixa{background:#d1fae5;color:#065f46;}
+    .pill.mensal{background:#e0e7ff;color:#3730a3;}
+    .pill.trimestral{background:#fce7f3;color:#9f1239;}
+    .pill.semestral{background:#fef3c7;color:#92400e;}
+    .pill.anual{background:#dbeafe;color:#1e40af;}
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+      gap:16px;
+      margin-bottom:20px;
+    }
+    .stat-card{
+      background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color:#fff;
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 6px 16px rgba(102,126,234,0.25);
+    }
+    .stat-card.green{
+      background:linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .stat-card.red{
+      background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    .stat-card.blue{
+      background:linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+    .stat-card.purple{
+      background:linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+    .stat-card.orange{
+      background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .stat-label{
+      font-size:12px;
+      opacity:0.95;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+      margin-bottom:6px;
+    }
+    .stat-value{
+      font-size:24px;
+      font-weight:700;
+    }
+    .investment-item{
+      padding:16px;
+      border:1.5px solid var(--border);
+      border-radius:10px;
+      margin-bottom:12px;
+      transition:all 0.2s;
+    }
+    .investment-item:hover{
+      border-color:var(--accent);
+      box-shadow:0 4px 12px rgba(3,102,214,0.1);
+    }
+    .investment-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:start;
+      margin-bottom:10px;
+    }
+    .investment-name{
+      font-weight:700;
+      font-size:16px;
+      color:#0f172a;
+    }
+    .investment-value{
+      font-size:18px;
+      font-weight:700;
+      color:var(--success);
+    }
+    .investment-details{
+      display:flex;
+      gap:16px;
+      font-size:13px;
+      color:var(--muted);
+      flex-wrap:wrap;
+    }
+    .investment-detail{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .detail-label{
+      font-size:11px;
+      text-transform:uppercase;
+      font-weight:600;
+    }
+    .detail-value{
+      font-weight:600;
+      color:#0f172a;
+    }
+    .notification{
+      position:fixed;
+      bottom:24px;
+      right:24px;
+      background:#1f2937;
+      color:#fff;
+      padding:16px 20px;
+      border-radius:10px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.3);
+      display:none;
+      align-items:center;
+      gap:12px;
+      z-index:1000;
+      animation:slideIn 0.3s ease-out;
+      max-width:400px;
+    }
+    .notification.show{
+      display:flex;
+    }
+    @keyframes slideIn{
+      from{ transform:translateX(450px); opacity:0; }
+      to{ transform:translateX(0); opacity:1; }
+    }
+    .searchbar{
+      display:flex;
+      gap:8px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .searchbar input{
+      margin-bottom:0;
+    }
+    .empty-state{
+      text-align:center;
+      padding:60px 20px;
+      color:var(--muted);
+    }
+    .empty-state-icon{
+      font-size:64px;
+      margin-bottom:16px;
+      opacity:0.5;
+    }
+    .empty-state-text{
+      font-size:16px;
+      font-weight:600;
+      margin-bottom:8px;
+    }
+    .empty-state-subtext{
+      font-size:14px;
+    }
+    @media(max-width:1200px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+      .grid-3{
+        grid-template-columns:1fr 1fr;
+      }
+    }
+    @media(max-width:768px){
+      .tabs{
+        overflow-x:auto;
+      }
+      .tab{
+        white-space:nowrap;
+      }
+      .grid-3{
+        grid-template-columns:1fr;
+      }
+      .stats{
+        grid-template-columns:1fr;
+      }
+      .searchbar{
+        flex-direction:column;
+      }
+      .searchbar input, .searchbar button{
+        width:100%;
+      }
+      .investment-details{
+        flex-direction:column;
+        gap:8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>💰 Controle Financeiro Completo</h1>
+      <p class="lead">Gerencie transações, investimentos e rendas recorrentes em um só lugar</p>
+      <div class="status-bar">
+        <div class="status-indicator" id="connectionStatus">
+          <span class="dot"></span>
+          <span id="statusText">Verificando...</span>
+        </div>
+        <div class="pending-sync" id="pendingSync">
+          ⏳ <span id="pendingCount">0</span> pendentes
+        </div>
+        <button class="small secondary" id="btnManualSync" style="display:none;">🔄 Sincronizar</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-tab="transactions">💳 Transações</button>
+        <button class="tab" data-tab="investments">📈 Investimentos</button>
+        <button class="tab" data-tab="recurring">🔄 Rendas Recorrentes</button>
+        <button class="tab" data-tab="dashboard">📊 Dashboard</button>
+      </div>
+    </div>
+  </header>
+  <main class="container">
+    <!-- TAB: TRANSAÇÕES -->
+    <div class="tab-content active" id="transactions">
+      <div class="stats">
+        <div class="stat-card blue">
+          <div class="stat-label">Total de Registros</div>
+          <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Recebimentos</div>
+          <div class="stat-value" id="statReceived">R$ 0,00</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Saídas</div>
+          <div class="stat-value" id="statSpent">R$ 0,00</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Saldo</div>
+          <div class="stat-value" id="statBalance">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="grid">
+        <section class="card">
+          <h3>📝 Nova Transação</h3>
+          <form id="transactionForm">
+            <input type="hidden" id="txId" />
+            <label>Tipo</label>
+            <select id="txType">
+              <option value="Compra">🛒 Compra</option>
+              <option value="Pagamento">💳 Pagamento</option>
+              <option value="Recebimento">💰 Recebimento</option>
+            </select>
+            <label>Descrição</label>
+            <input type="text" id="txDescription" placeholder="Ex: Compra supermercado" required />
+            <div class="row">
+              <div>
+                <label>Valor (R$)</label>
+                <input type="number" id="txAmount" step="0.01" placeholder="0,00" required />
+              </div>
+              <div>
+                <label>Categoria</label>
+                <input type="text" id="txCategory" placeholder="Ex: Alimentação" />
+              </div>
+            </div>
+            <label>Data e Hora</label>
+            <input type="datetime-local" id="txDatetime" />
+            <div class="btn-group">
+              <button type="submit">💾 Salvar</button>
+              <button type="button" class="secondary" id="btnTxClear">🗑️ Limpar</button>
+              <button type="button" class="secondary" id="btnTxExport">📊 Exportar CSV</button>
+            </div>
+          </form>
+          <hr style="margin:24px 0;border:none;border-top:1.5px solid var(--border)" />
+          <h3 style="font-size:15px;margin-bottom:12px">🔍 Pesquisar</h3>
+          <div class="searchbar">
+            <input type="text" id="txSearch" placeholder="Buscar..." style="flex:2" />
+            <input type="date" id="txFromDate" style="flex:1" />
+            <input type="date" id="txToDate" style="flex:1" />
+          </div>
+          <div class="btn-group">
+            <button id="btnTxSearch" class="small">🔎 Buscar</button>
+            <button id="btnTxToday" class="small secondary">Hoje</button>
+            <button id="btnTxWeek" class="small secondary">Semana</button>
+            <button id="btnTxMonth" class="small secondary">Mês</button>
+            <button id="btnTxRefresh" class="small success">🔄 Atualizar</button>
+          </div>
+        </section>
+        <aside class="card">
+          <h3>📋 Histórico</h3>
+          <div class="list" id="txList">
+            <table id="txTable">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Descrição</th>
+                  <th>Valor</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <!-- TAB: INVESTIMENTOS -->
+    <div class="tab-content" id="investments">
+      <div class="stats">
+        <div class="stat-card purple">
+          <div class="stat-label">Total Investido</div>
+          <div class="stat-value" id="statInvTotal">R$ 0,00</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Fundos Imobiliários</div>
+          <div class="stat-value" id="statFII">R$ 0,00</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Fiagro</div>
+          <div class="stat-value" id="statFiagro">R$ 0,00</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Ações</div>
+          <div class="stat-value" id="statAcoes">R$ 0,00</div>
+        </div>
+      </div>
+      <div class="grid">
+        <section class="card">
+          <h3>📈 Novo Investimento</h3>
+          <form id="investmentForm">
+            <input type="hidden" id="invId" />
+            <label>Tipo de Ativo</label>
+            <select id="invType">
+              <option value="FII">🏢 Fundo Imobiliário (FII)</option>
+              <option value="Fiagro">🌾 Fiagro</option>
+              <option value="Acao">📊 Ação</option>
+              <option value="Renda Fixa">💵 Renda Fixa</option>
+            </select>
+            <label>Nome do Ativo / Ticker</label>
+            <input type="text" id="invName" placeholder="Ex: HGLG11, PETR4" required />
+            <div class="row">
+              <div>
+                <label>Quantidade</label>
+                <input type="number" id="invQuantity" step="1" placeholder="0" required />
+              </div>
+              <div>
+                <label>Preço Médio (R$)</label>
+                <input type="number" id="invPrice" step="0.01" placeholder="0,00" required />
+              </div>
+            </div>
+            <label>Valor Total Investido (R$)</label>
+            <input type="number" id="invTotal" step="0.01" placeholder="Calculado automaticamente" readonly />
+            <label>Data da Compra</label>
+            <input type="date" id="invDate" />
+            <label>Observações</label>
+            <textarea id="invNotes" placeholder="Anotações sobre o investimento..."></textarea>
+            <div class="btn-group">
+              <button type="submit" class="purple">💾 Salvar</button>
+              <button type="button" class="secondary" id="btnInvClear">🗑️ Limpar</button>
+              <button type="button" class="secondary" id="btnInvExport">📊 Exportar</button>
+            </div>
+          </form>
+        </section>
+        <aside class="card">
+          <h3>💼 Minha Carteira</h3>
+          <div class="list" id="invList"></div>
+        </aside>
+      </div>
+    </div>
+    <!-- TAB: RENDAS RECORRENTES -->
+    <div class="tab-content" id="recurring">
+      <div class="stats">
+        <div class="stat-card green">
+          <div class="stat-label">Renda Mensal</div>
+          <div class="stat-value" id="statRecMonthly">R$ 0,00</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Renda Anual</div>
+          <div class="stat-value" id="statRecYearly">R$ 0,00</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Total de Fontes</div>
+          <div class="stat-value" id="statRecCount">0</div>
+        </div>
+      </div>
+      <div class="grid">
+        <section class="card">
+          <h3>🔄 Nova Renda Recorrente</h3>
+          <form id="recurringForm">
+            <input type="hidden" id="recId" />
+            <label>Nome da Fonte</label>
+            <input type="text" id="recName" placeholder="Ex: Dividendos PETR4, Aluguel" required />
+            <label>Tipo</label>
+            <select id="recType">
+              <option value="Dividendos">💰 Dividendos</option>
+              <option value="JCP">💵 Juros sobre Capital Próprio</option>
+              <option value="Rendimento FII">🏢 Rendimento FII</option>
+              <option value="Rendimento Fiagro">🌾 Rendimento Fiagro</option>
+              <option value="Aluguel">🏠 Aluguel</option>
+              <option value="Freelance">💼 Freelance</option>
+              <option value="Outros">📌 Outros</option>
+            </select>
+            <div class="row">
+              <div>
+                <label>Valor (R$)</label>
+                <input type="number" id="recAmount" step="0.01" placeholder="0,00" required />
+              </div>
+              <div>
+                <label>Frequência</label>
+                <select id="recFrequency">
+                  <option value="Mensal">📅 Mensal</option>
+                  <option value="Trimestral">📆 Trimestral</option>
+                  <option value="Semestral">🗓️ Semestral</option>
+                  <option value="Anual">📋 Anual</option>
+                </select>
+              </div>
+            </div>
+            <label>Próximo Pagamento</label>
+            <input type="date" id="recNextDate" />
+            <label>Observações</label>
+            <textarea id="recNotes" placeholder="Informações adicionais..."></textarea>
+            <div class="btn-group">
+              <button type="submit" class="success">💾 Salvar</button>
+              <button type="button" class="secondary" id="btnRecClear">🗑️ Limpar</button>
+              <button type="button" class="secondary" id="btnRecExport">📊 Exportar</button>
+            </div>
+          </form>
+        </section>
+        <aside class="card">
+          <h3>💸 Minhas Rendas</h3>
+          <div class="list" id="recList"></div>
+        </aside>
+      </div>
+    </div>
+    <!-- TAB: DASHBOARD -->
+    <div class="tab-content" id="dashboard">
+      <h2 style="margin-bottom:20px">📊 Visão Geral Completa</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>💳 Resumo Transações</h3>
+          <div style="margin-top:20px">
+            <div style="margin-bottom:16px">
+              <div class="muted" style="font-size:12px;margin-bottom:4px">Total de Registros</div>
+              <div style="font-size:28px;font-weight:700;color:var(--accent)" id="dashTxTotal">0</div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div class="muted" style="font-size:12px;margin-bottom:4px">Receitas</div>
+              <div style="font-size:24px;font-weight:700;color:var(--success)" id="dashTxIn">R$ 0,00</div>
+            </div>
+            <div>
+              <div class="muted" style="font-size:12px;margin-bottom:4px">Despesas</div>
+              <div style="font-size:24px;font-weight:700;color:var(--danger)" id="dashTxOut">R$ 0,00</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>📈 Resumo Investimentos</h3>
+          <div style="margin-top:20px">
+            <div style="margin-bottom:16px">
+              <div class="muted" style="font-size:12px;margin-bottom:4px">Patrimônio Total</div>
+              <div style="font-size:28px;font-weight:700;color:var(--purple)" id="dashInvTotal">R$ 0,00</div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div class="muted" style="font-size:12px;margin-bottom:4px">Ativos na Carteira</div>
+              <div style="font-size:24px;font-weight:700;color:var(--accent)" id="dashInvCount">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>🔄 Resumo Rendas</h3>
+          <div style="margin-top:20px">
+            <div style="margin-bottom:16px">
+              <div class="muted" style="font-size:12px;margin-bottom:4px">Renda Mensal</div>
+              <div style="font-size:28px;font-weight:700;color:var(--success)" id="dashRecMonthly">R$ 0,00</div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div class="muted" style="font-size:12px;margin-bottom:4px">Renda Anual Projetada</div>
+              <div style="font-size:24px;font-weight:700;color:var(--purple)" id="dashRecYearly">R$ 0,00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:24px" class="card">
+        <h3>💡 Insights Financeiros</h3>
+        <div id="insights" style="margin-top:16px">
+          <p class="muted">Adicione transações, investimentos e rendas para ver insights personalizados.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="notification" id="notification">
+    <span id="notificationText"></span>
+  </div>
+  <script>
+    // === CONFIGURAÇÃO ===
+    const SCRIPT_URL = 'REPLACE_WITH_YOUR_APPS_SCRIPT_WEBAPP_URL';
+    const STORAGE_TRANSACTIONS = 'financeTransactions';
+    const STORAGE_INVESTMENTS = 'financeInvestments';
+    const STORAGE_RECURRING = 'financeRecurring';
+    const STORAGE_PENDING = 'financePending';
+    const SYNC_INTERVAL = 30000;
+    // === FORMATAÇÃO ===
+    const fmt = new Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'});
+    // === ELEMENTOS DOM ===
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notificationText');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const statusText = document.getElementById('statusText');
+    const pendingSync = document.getElementById('pendingSync');
+    const pendingCount = document.getElementById('pendingCount');
+    const btnManualSync = document.getElementById('btnManualSync');
+    // === ESTADO GLOBAL ===
+    let isOnline = navigator.onLine;
+    let transactions = [];
+    let investments = [];
+    let recurring = [];
+    let pendingOperations = [];
+    let currentTab = 'transactions';
+    // === INICIALIZAÇÃO ===
+    function init(){
+      loadFromLocalStorage();
+      updateConnectionStatus();
+      setupTabs();
+      setupTransactions();
+      setupInvestments();
+      setupRecurring();
+      renderAll();
+      updateDashboard();
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      setInterval(autoSync, SYNC_INTERVAL);
+      if(isOnline) syncWithServer();
+    }
+    // === TABS ===
+    function setupTabs(){
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', ()=>{
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          const tabId = tab.dataset.tab;
+          document.getElementById(tabId).classList.add('active');
+          currentTab = tabId;
+          if(tabId === 'dashboard') updateDashboard();
+        });
+      });
+    }
+    // === ARMAZENAMENTO LOCAL ===
+    function loadFromLocalStorage(){
+      try{
+        transactions = JSON.parse(localStorage.getItem(STORAGE_TRANSACTIONS) || '[]');
+        investments = JSON.parse(localStorage.getItem(STORAGE_INVESTMENTS) || '[]');
+        recurring = JSON.parse(localStorage.getItem(STORAGE_RECURRING) || '[]');
+        pendingOperations = JSON.parse(localStorage.getItem(STORAGE_PENDING) || '[]');
+        updatePendingIndicator();
+      }catch(err){
+        console.error('Erro ao carregar dados:', err);
+      }
+    }
+    function saveToLocalStorage(){
+      try{
+        localStorage.setItem(STORAGE_TRANSACTIONS, JSON.stringify(transactions));
+        localStorage.setItem(STORAGE_INVESTMENTS, JSON.stringify(investments));
+        localStorage.setItem(STORAGE_RECURRING, JSON.stringify(recurring));
+        localStorage.setItem(STORAGE_PENDING, JSON.stringify(pendingOperations));
+      }catch(err){
+        console.error('Erro ao salvar dados:', err);
+        showNotification('⚠️ Erro ao salvar localmente', 'warning');
+      }
+    }
+    // === CONEXÃO ===
+    function updateConnectionStatus(){
+      isOnline = navigator.onLine;
+      if(isOnline){
+        connectionStatus.classList.remove('offline');
+        connectionStatus.classList.add('online');
+        statusText.textContent = 'Online';
+        btnManualSync.style.display = pendingOperations.length > 0 ? 'block' : 'none';
+      }else{
+        connectionStatus.classList.remove('online');
+        connectionStatus.classList.add('offline');
+        statusText.textContent = 'Offline';
+        btnManualSync.style.display = 'none';
+      }
+    }
+    function handleOnline(){
+      isOnline = true;
+      updateConnectionStatus();
+      showNotification('✅ Conexão restaurada! Sincronizando...', 'success');
+      syncWithServer();
+    }
+    function handleOffline(){
+      isOnline = false;
+      updateConnectionStatus();
+      showNotification('⚠️ Offline. Dados salvos localmente.', 'warning');
+    }
+    function updatePendingIndicator(){
+      const count = pendingOperations.length;
+      pendingCount.textContent = count;
+      if(count > 0){
+        pendingSync.classList.add('show');
+        btnManualSync.style.display = isOnline ? 'block' : 'none';
+      }else{
+        pendingSync.classList.remove('show');
+        btnManualSync.style.display = 'none';
+      }
+    }
+    // === API ===
+    async function api(action, payload = {}, isRetry = false){
+      if(!isOnline && !isRetry){
+        throw new Error('offline');
+      }
+      try{
+        const url = SCRIPT_URL + '?action=' + encodeURIComponent(action);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        const json = await res.json();
+        if(json.error) throw new Error(json.error);
+        return json;
+      }catch(err){
+        if(err.name === 'AbortError'){
+          throw new Error('Timeout');
+        }
+        throw err;
+      }
+    }
+    // === SINCRONIZAÇÃO ===
+    async function syncWithServer(){
+      if(!isOnline) return;
+      try{
+        const serverData = await api('listAll');
+        if(serverData.success){
+          if(pendingOperations.length > 0){
+            await processPendingOperations();
+          }
+          transactions = serverData.transactions || [];
+          investments = serverData.investments || [];
+          recurring = serverData.recurring || [];
+          saveToLocalStorage();
+          renderAll();
+          updateDashboard();
+          showNotification('✅ Sincronizado!', 'success');
+        }
+      }catch(err){
+        console.error('Erro na sincronização:', err);
+        showNotification('⚠️ Erro ao sincronizar', 'warning');
+      }
+    }
+    async function processPendingOperations(){
+      const operations = [...pendingOperations];
+      pendingOperations = [];
+      for(const op of operations){
+        try{
+          await api(op.action, op.payload, true);
+        }catch(err){
+          console.error('Erro ao processar pendente:', err);
+          pendingOperations.push(op);
+        }
+      }
+      saveToLocalStorage();
+      updatePendingIndicator();
+    }
+    function autoSync(){
+      if(isOnline && pendingOperations.length > 0){
+        syncWithServer();
+      }
+    }
+    btnManualSync.addEventListener('click', syncWithServer);
+    // === HELPER FUNÇÕES ===
+    function generateId(){
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+    function escapeHtml(text){
+      if(typeof text !== 'string') return '';
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+    function showNotification(message, type = 'info'){
+      notificationText.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => notification.classList.remove('show'), 5000);
+    }
+    async function addData(collection, data){
+      const op = { action: `create${capitalize(collection)}`, payload: data };
+      if(isOnline){
+        try{
+          await api(op.action, op.payload);
+          showNotification('✅ Salvo com sucesso!');
+        }catch(err){
+          if(err.message === 'offline'){
+            pendingOperations.push(op);
+            saveToLocalStorage();
+            updatePendingIndicator();
+            showNotification('⏳ Salvo localmente. Aguardando sincronização.', 'warning');
+          }else{
+            showNotification('⚠️ Erro ao salvar', 'danger');
+          }
+        }
+      }else{
+        pendingOperations.push(op);
+        saveToLocalStorage();
+        updatePendingIndicator();
+        showNotification('⏳ Salvo localmente. Aguardando sincronização.', 'warning');
+      }
+    }
+    async function updateData(collection, data){
+      const op = { action: `update${capitalize(collection)}`, payload: data };
+      if(isOnline){
+        try{
+          await api(op.action, op.payload);
+          showNotification('✅ Atualizado com sucesso!');
+        }catch(err){
+          if(err.message === 'offline'){
+            pendingOperations.push(op);
+            saveToLocalStorage();
+            updatePendingIndicator();
+            showNotification('⏳ Atualização adiada. Offline.', 'warning');
+          }else{
+            showNotification('⚠️ Erro ao atualizar', 'danger');
+          }
+        }
+      }else{
+        pendingOperations.push(op);
+        saveToLocalStorage();
+        updatePendingIndicator();
+        showNotification('⏳ Atualização adiada. Offline.', 'warning');
+      }
+    }
+    async function deleteData(collection, id){
+      const op = { action: `delete${capitalize(collection)}`, payload: {id} };
+      if(isOnline){
+        try{
+          await api(op.action, op.payload);
+          showNotification('✅ Excluído com sucesso!');
+        }catch(err){
+          if(err.message === 'offline'){
+            pendingOperations.push(op);
+            saveToLocalStorage();
+            updatePendingIndicator();
+            showNotification('⏳ Exclusão adiada. Offline.', 'warning');
+          }else{
+            showNotification('⚠️ Erro ao excluir', 'danger');
+          }
+        }
+      }else{
+        pendingOperations.push(op);
+        saveToLocalStorage();
+        updatePendingIndicator();
+        showNotification('⏳ Exclusão adiada. Offline.', 'warning');
+      }
+    }
+    function capitalize(str){
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    function exportToCSV(data, filename){
+      if(data.length === 0){
+        showNotification('⚠️ Nenhum dado para exportar', 'warning');
+        return;
+      }
+      let csv = 'data:text/csv;charset=utf-8,';
+      const headers = Object.keys(data[0]).filter(k => k !== 'dataType');
+      csv += headers.join(',') + '\n';
+      for(const row of data){
+        const values = headers.map(h => `"${String(row[h] || '').replace(/"/g, '""')}"`);
+        csv += values.join(',') + '\n';
+      }
+      const encoded = encodeURI(csv);
+      const link = document.createElement('a');
+      link.setAttribute('href', encoded);
+      link.setAttribute('download', `${filename}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    // === TRANSAÇÕES ===
+    function setupTransactions(){
+      const form = document.getElementById('transactionForm');
+      const table = document.querySelector('#txTable tbody');
+      // Auto-calcular valor total no investimento
+      document.getElementById('invQuantity').addEventListener('input', calcInvTotal);
+      document.getElementById('invPrice').addEventListener('input', calcInvTotal);
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('txId').value;
+        const data = {
+          id: id || generateId(),
+          type: document.getElementById('txType').value,
+          description: document.getElementById('txDescription').value.trim(),
+          amount: parseFloat(document.getElementById('txAmount').value),
+          category: document.getElementById('txCategory').value.trim(),
+          datetime: document.getElementById('txDatetime').value || new Date().toISOString(),
+          dataType: 'transaction'
+        };
+        if(id){
+          await updateData('transactions', data);
+        }else{
+          await addData('transactions', data);
+        }
+        form.reset();
+        document.getElementById('txId').value = '';
+        renderTransactions();
+        updateStats();
+      });
+      document.getElementById('btnTxClear').addEventListener('click', () => {
+        form.reset();
+        document.getElementById('txId').value = '';
+      });
+      document.getElementById('btnTxRefresh').addEventListener('click', () => {
+        if(isOnline) syncWithServer();
+        else renderTransactions();
+      });
+      document.getElementById('btnTxSearch').addEventListener('click', () => {
+        const query = document.getElementById('txSearch').value.trim().toLowerCase();
+        const from = document.getElementById('txFromDate').value;
+        const to = document.getElementById('txToDate').value;
+        let filtered = transactions;
+        if(query){
+          filtered = filtered.filter(t => 
+            (t.description || '').toLowerCase().includes(query) ||
+            (t.category || '').toLowerCase().includes(query)
+          );
+        }
+        if(from || to){
+          filtered = filtered.filter(t => {
+            const dt = new Date(t.datetime);
+            const fromDate = from ? new Date(from + 'T00:00:00') : null;
+            const toDate = to ? new Date(to + 'T23:59:59') : null;
+            if(fromDate && dt < fromDate) return false;
+            if(toDate && dt > toDate) return false;
+            return true;
+          });
+        }
+        renderTransactionsList(filtered);
+      });
+      document.getElementById('btnTxToday').addEventListener('click', () => {
+        const today = new Date().toISOString().slice(0,10);
+        document.getElementById('txFromDate').value = today;
+        document.getElementById('txToDate').value = today;
+        document.getElementById('btnTxSearch').click();
+      });
+      document.getElementById('btnTxWeek').addEventListener('click', () => {
+        const now = new Date();
+        const start = new Date(now);
+        start.setDate(now.getDate() - now.getDay());
+        document.getElementById('txFromDate').value = start.toISOString().slice(0,10);
+        document.getElementById('txToDate').value = now.toISOString().slice(0,10);
+        document.getElementById('btnTxSearch').click();
+      });
+      document.getElementById('btnTxMonth').addEventListener('click', () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        document.getElementById('txFromDate').value = start.toISOString().slice(0,10);
+        document.getElementById('txToDate').value = now.toISOString().slice(0,10);
+        document.getElementById('btnTxSearch').click();
+      });
+      document.getElementById('btnTxExport').addEventListener('click', () => {
+        exportToCSV(transactions, 'transacoes');
+      });
+      table.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if(action === 'edit'){
+          const item = transactions.find(t => t.id === id);
+          if(!item) return;
+          document.getElementById('txId').value = item.id;
+          document.getElementById('txType').value = item.type;
+          document.getElementById('txDescription').value = item.description;
+          document.getElementById('txAmount').value = item.amount;
+          document.getElementById('txCategory').value = item.category || '';
+          const dt = new Date(item.datetime);
+          const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+          document.getElementById('txDatetime').value = local;
+          window.scrollTo({top: 0, behavior: 'smooth'});
+        }else if(action === 'delete'){
+          if(!confirm('🗑️ Excluir este registro?')) return;
+          await deleteData('transactions', id);
+          renderTransactions();
+          updateStats();
+        }
+      });
+    }
+    function renderTransactions(){
+      renderTransactionsList(transactions);
+      updateStats();
+    }
+    function renderTransactionsList(list){
+      const tbody = document.querySelector('#txTable tbody');
+      tbody.innerHTML = '';
+      if(list.length === 0){
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Nenhuma transação encontrada</div></td></tr>';
+        return;
+      }
+      const sorted = [...list].sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+      for(const t of sorted){
+        const tr = document.createElement('tr');
+        const dt = new Date(t.datetime);
+        const isPending = pendingOperations.some(op => op.payload.id === t.id);
+        if(isPending) tr.classList.add('pending-row');
+        tr.innerHTML = `
+          <td>${dt.toLocaleString('pt-BR', {dateStyle:'short', timeStyle:'short'})}</td>
+          <td><span class="pill ${t.type.toLowerCase()}">${t.type}</span></td>
+          <td>${escapeHtml(t.description)}<br><small class="muted">${escapeHtml(t.category||'')}</small></td>
+          <td style="font-weight:700;color:${t.type==='Recebimento'?'var(--success)':'var(--danger)'}">${fmt.format(t.amount||0)}</td>
+          <td class="actions">
+            <button class="small secondary" data-id="${t.id}" data-action="edit">✏️</button>
+            <button class="small danger" data-id="${t.id}" data-action="delete">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+    function updateStats(){
+      const total = transactions.length;
+      let received = 0;
+      let spent = 0;
+      for(const t of transactions){
+        const amount = parseFloat(t.amount) || 0;
+        if(t.type === 'Recebimento'){
+          received += amount;
+        }else{
+          spent += amount;
+        }
+      }
+      const balance = received - spent;
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statReceived').textContent = fmt.format(received);
+      document.getElementById('statSpent').textContent = fmt.format(spent);
+      document.getElementById('statBalance').textContent = fmt.format(balance);
+    }
+    // === INVESTIMENTOS ===
+    function setupInvestments(){
+      const form = document.getElementById('investmentForm');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('invId').value;
+        const quantity = parseFloat(document.getElementById('invQuantity').value);
+        const price = parseFloat(document.getElementById('invPrice').value);
+        const data = {
+          id: id || generateId(),
+          type: document.getElementById('invType').value,
+          name: document.getElementById('invName').value.trim().toUpperCase(),
+          quantity: quantity,
+          price: price,
+          total: quantity * price,
+          date: document.getElementById('invDate').value || new Date().toISOString().slice(0,10),
+          notes: document.getElementById('invNotes').value.trim(),
+          dataType: 'investment'
+        };
+        if(id){
+          await updateData('investments', data);
+        }else{
+          await addData('investments', data);
+        }
+        form.reset();
+        document.getElementById('invId').value = '';
+        document.getElementById('invTotal').value = '';
+        renderInvestments();
+        updateInvestmentStats();
+      });
+      document.getElementById('btnInvClear').addEventListener('click', () => {
+        form.reset();
+        document.getElementById('invId').value = '';
+        document.getElementById('invTotal').value = '';
+      });
+      document.getElementById('btnInvExport').addEventListener('click', () => {
+        exportToCSV(investments, 'investimentos');
+      });
+    }
+    function calcInvTotal(){
+      const qty = parseFloat(document.getElementById('invQuantity').value) || 0;
+      const price = parseFloat(document.getElementById('invPrice').value) || 0;
+      document.getElementById('invTotal').value = (qty * price).toFixed(2);
+    }
+    function renderInvestments(){
+      const container = document.getElementById('invList');
+      container.innerHTML = '';
+      if(investments.length === 0){
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">Nenhum investimento cadastrado</div><div class="empty-state-subtext">Adicione seus ativos para começar</div></div>';
+        return;
+      }
+      const sorted = [...investments].sort((a,b) => b.total - a.total);
+      for(const inv of sorted){
+        const div = document.createElement('div');
+        div.className = 'investment-item';
+        div.innerHTML = `
+          <div class="investment-header">
+            <div>
+              <div class="investment-name">${escapeHtml(inv.name)}</div>
+              <span class="pill ${inv.type.toLowerCase().replace(' ', '-')}">${inv.type}</span>
+            </div>
+            <div class="investment-value">${fmt.format(inv.total||0)}</div>
+          </div>
+          <div class="investment-details">
+            <div class="investment-detail">
+              <span class="detail-label">Quantidade</span>
+              <span class="detail-value">${inv.quantity}</span>
+            </div>
+            <div class="investment-detail">
+              <span class="detail-label">Preço Médio</span>
+              <span class="detail-value">${fmt.format(inv.price||0)}</span>
+            </div>
+            <div class="investment-detail">
+              <span class="detail-label">Data</span>
+              <span class="detail-value">${new Date(inv.date).toLocaleDateString('pt-BR')}</span>
+            </div>
+          </div>
+          ${inv.notes ? `<div style="margin-top:10px;font-size:12px;color:var(--muted)">${escapeHtml(inv.notes)}</div>` : ''}
+          <div class="actions" style="margin-top:12px">
+            <button class="small secondary" onclick="editInvestment('${inv.id}')">✏️ Editar</button>
+            <button class="small danger" onclick="deleteInvestment('${inv.id}')">🗑️ Excluir</button>
+          </div>
+        `;
+        container.appendChild(div);
+      }
+      updateInvestmentStats();
+    }
+    window.editInvestment = function(id){
+      const inv = investments.find(i => i.id === id);
+      if(!inv) return;
+      document.getElementById('invId').value = inv.id;
+      document.getElementById('invType').value = inv.type;
+      document.getElementById('invName').value = inv.name;
+      document.getElementById('invQuantity').value = inv.quantity;
+      document.getElementById('invPrice').value = inv.price;
+      document.getElementById('invTotal').value = inv.total;
+      document.getElementById('invDate').value = inv.date;
+      document.getElementById('invNotes').value = inv.notes || '';
+      document.querySelectorAll('.tab')[1].click();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    };
+    window.deleteInvestment = async function(id){
+      if(!confirm('🗑️ Excluir este investimento?')) return;
+      await deleteData('investments', id);
+      renderInvestments();
+    };
+    function updateInvestmentStats(){
+      let total = 0;
+      let fii = 0;
+      let fiagro = 0;
+      let acoes = 0;
+      for(const inv of investments){
+        const value = inv.total || 0;
+        total += value;
+        if(inv.type === 'FII') fii += value;
+        else if(inv.type === 'Fiagro') fiagro += value;
+        else if(inv.type === 'Acao') acoes += value;
+      }
+      document.getElementById('statInvTotal').textContent = fmt.format(total);
+      document.getElementById('statFII').textContent = fmt.format(fii);
+      document.getElementById('statFiagro').textContent = fmt.format(fiagro);
+      document.getElementById('statAcoes').textContent = fmt.format(acoes);
+    }
+    // === RENDAS RECORRENTES ===
+    function setupRecurring(){
+      const form = document.getElementById('recurringForm');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('recId').value;
+        const data = {
+          id: id || generateId(),
+          name: document.getElementById('recName').value.trim(),
+          type: document.getElementById('recType').value,
+          amount: parseFloat(document.getElementById('recAmount').value),
+          frequency: document.getElementById('recFrequency').value,
+          nextDate: document.getElementById('recNextDate').value,
+          notes: document.getElementById('recNotes').value.trim(),
+          dataType: 'recurring'
+        };
+        if(id){
+          await updateData('recurring', data);
+        }else{
+          await addData('recurring', data);
+        }
+        form.reset();
+        document.getElementById('recId').value = '';
+        renderRecurring();
+        updateRecurringStats();
+      });
+      document.getElementById('btnRecClear').addEventListener('click', () => {
+        form.reset();
+        document.getElementById('recId').value = '';
+      });
+      document.getElementById('btnRecExport').addEventListener('click', () => {
+        exportToCSV(recurring, 'rendas_recorrentes');
+      });
+    }
+    function renderRecurring(){
+      const container = document.getElementById('recList');
+      container.innerHTML = '';
+      if(recurring.length === 0){
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💸</div><div class="empty-state-text">Nenhuma renda recorrente</div><div class="empty-state-subtext">Cadastre suas fontes de renda passiva</div></div>';
+        return;
+      }
+      const sorted = [...recurring].sort((a,b) => b.amount - a.amount);
+      for(const rec of sorted){
+        const div = document.createElement('div');
+        div.className = 'investment-item';
+        div.innerHTML = `
+          <div class="investment-header">
+            <div>
+              <div class="investment-name">${escapeHtml(rec.name)}</div>
+              <span class="pill ${rec.type.toLowerCase().replace(/ /g, '-')}">${rec.type}</span>
+              <span class="pill ${rec.frequency.toLowerCase()}">${rec.frequency}</span>
+            </div>
+            <div class="investment-value">${fmt.format(rec.amount||0)}</div>
+          </div>
+          <div class="investment-details">
+            <div class="investment-detail">
+              <span class="detail-label">Próximo Pagamento</span>
+              <span class="detail-value">${rec.nextDate ? new Date(rec.nextDate).toLocaleDateString('pt-BR') : '-'}</span>
+            </div>
+            <div class="investment-detail">
+              <span class="detail-label">Anual Estimado</span>
+              <span class="detail-value">${fmt.format(calcYearlyIncome(rec.amount, rec.frequency))}</span>
+            </div>
+          </div>
+          ${rec.notes ? `<div style="margin-top:10px;font-size:12px;color:var(--muted)">${escapeHtml(rec.notes)}</div>` : ''}
+          <div class="actions" style="margin-top:12px">
+            <button class="small secondary" onclick="editRecurring('${rec.id}')">✏️ Editar</button>
+            <button class="small danger" onclick="deleteRecurring('${rec.id}')">🗑️ Excluir</button>
+          </div>
+        `;
+        container.appendChild(div);
+      }
+      updateRecurringStats();
+    }
+    window.editRecurring = function(id){
+      const rec = recurring.find(r => r.id === id);
+      if(!rec) return;
+      document.getElementById('recId').value = rec.id;
+      document.getElementById('recName').value = rec.name;
+      document.getElementById('recType').value = rec.type;
+      document.getElementById('recAmount').value = rec.amount;
+      document.getElementById('recFrequency').value = rec.frequency;
+      document.getElementById('recNextDate').value = rec.nextDate;
+      document.getElementById('recNotes').value = rec.notes || '';
+      document.querySelectorAll('.tab')[2].click();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    };
+    window.deleteRecurring = async function(id){
+      if(!confirm('🗑️ Excluir esta renda recorrente?')) return;
+      await deleteData('recurring', id);
+      renderRecurring();
+    };
+    function calcYearlyIncome(amount, frequency){
+      const multipliers = {
+        'Mensal': 12,
+        'Trimestral': 4,
+        'Semestral': 2,
+        'Anual': 1
+      };
+      return amount * (multipliers[frequency] || 12);
+    }
+    function updateRecurringStats(){
+      let monthly = 0;
+      let yearly = 0;
+      for(const rec of recurring){
+        const amount = rec.amount || 0;
+        yearly += calcYearlyIncome(amount, rec.frequency);
+        if(rec.frequency === 'Mensal') monthly += amount;
+        else if(rec.frequency === 'Trimestral') monthly += amount / 3;
+        else if(rec.frequency === 'Semestral') monthly += amount / 6;
+        else if(rec.frequency === 'Anual') monthly += amount / 12;
+      }
+      document.getElementById('statRecMonthly').textContent = fmt.format(monthly);
+      document.getElementById('statRecYearly').textContent = fmt.format(yearly);
+      document.getElementById('statRecCount').textContent = recurring.length;
+    }
+    // === DASHBOARD ===
+    function updateDashboard(){
+      // Transações
+      let txReceived = 0;
+      let txSpent = 0;
+      for(const t of transactions){
+        const amount = parseFloat(t.amount) || 0;
+        if(t.type === 'Recebimento') txReceived += amount;
+        else txSpent += amount;
+      }
+      document.getElementById('dashTxTotal').textContent = transactions.length;
+      document.getElementById('dashTxIn').textContent = fmt.format(txReceived);
+      document.getElementById('dashTxOut').textContent = fmt.format(txSpent);
+      // Investimentos
+      const invTotal = investments.reduce((sum, inv) => sum + (inv.total || 0), 0);
+      document.getElementById('dashInvTotal').textContent = fmt.format(invTotal);
+      document.getElementById('dashInvCount').textContent = investments.length;
+      // Rendas
+      let monthly = 0;
+      for(const rec of recurring){
+        const amount = rec.amount || 0;
+        if(rec.frequency === 'Mensal') monthly += amount;
+        else if(rec.frequency === 'Trimestral') monthly += amount / 3;
+        else if(rec.frequency === 'Semestral') monthly += amount / 6;
+        else if(rec.frequency === 'Anual') monthly += amount / 12;
+      }
+      document.getElementById('dashRecMonthly').textContent = fmt.format(monthly);
+      document.getElementById('dashRecYearly').textContent = fmt.format(monthly * 12);
+      // Insights
+      generateInsights();
+    }
+    function generateInsights(){
+      const container = document.getElementById('insights');
+      const insights = [];
+      // Análise de gastos
+      if(transactions.length > 0){
+        const now = new Date();
+        const thisMonth = transactions.filter(t => {
+          const dt = new Date(t.datetime);
+          return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear();
+        });
+        const spent = thisMonth.filter(t => t.type !== 'Recebimento').reduce((sum, t) => sum + (t.amount || 0), 0);
+        const received = thisMonth.filter(t => t.type === 'Recebimento').reduce((sum, t) => sum + (t.amount || 0), 0);
+        if(spent > received){
+          insights.push('⚠️ Este mês você gastou mais do que recebeu.');
+        }else if(received > spent){
+          insights.push('✅ Excelente! Suas receitas superaram suas despesas este mês.');
+        }
+      }
+      // Diversificação de investimentos
+      if(investments.length > 0){
+        const types = new Set(investments.map(i => i.type));
+        if(types.size === 1){
+          insights.push('🔍 Considere diversificar seus investimentos em diferentes classes de ativos.');
+        }else if(types.size >= 3){
+          insights.push('🎯 Ótima diversificação! Você investe em múltiplas categorias.');
+        }
+      }
+      // Rendas passivas
+      if(recurring.length === 0){
+        insights.push('💡 Comece a cadastrar fontes de renda recorrente para aumentar sua independência financeira.');
+      }
+      // Exibir insights
+      if(insights.length > 0){
+        container.innerHTML = insights.map(i => `<p>💬 ${i}</p>`).join('');
+      }else{
+        container.innerHTML = '<p class="muted">Adicione dados para gerar insights financeiros personalizados.</p>';
+      }
+    }
+    // === RENDERIZAÇÃO GERAL ===
+    function renderAll(){
+      renderTransactions();
+      renderInvestments();
+      renderRecurring();
+    }
+    // === INICIAR APLICAÇÃO ===
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
+
