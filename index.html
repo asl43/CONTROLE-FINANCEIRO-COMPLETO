@@ -919,7 +919,7 @@
         // =======================================================================
         
         // COLOQUE AQUI O URL DO SEU GOOGLE APPS SCRIPT
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOf-hJKft87ZSyB6gWbHqP9hONOKO8PFN8iHe6xS6s10ac1Ugm7VrqBRhb3G6Ve2Q7Uw/exec'; // *** SUBSTITUA ESTE URL! ***
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwMDvIJAho7rLN33TSACRwDCiY2UfwL_XmTBIjQ2SC6ALfrbax6QR_Q2WZRqIoAs5TWQ/exec'; // *** SUBSTITUA ESTE URL! ***
         
         const STORAGE_TRANSACTIONS = 'financeTransactions_v4';
         const STORAGE_INVESTMENTS = 'financeInvestments_v4';
@@ -1080,41 +1080,41 @@
             }
         }
         
-        async function api(action, payload = {}, isRetry = false) {
-            // SIMULAÇÃO DA CHAMADA API COM RESPOSTA LOCAL PARA PREVENIR ERROS DE FALTA DE BACKEND.
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    if (action === 'listAll') {
-                        // Simula retorno dos dados locais
-                        resolve({ success: true, transactions, investments, recurring, goals });
-                    } else if (action === 'ping') {
-                         resolve({ success: true, message: 'Pong!' });
-                    } else if (action.startsWith('create') || action.startsWith('edit') || action.startsWith('delete')) {
-                        // Simulação de sucesso para operações CRUD
-                        resolve({ success: true, message: 'Operação simulada com sucesso' });
-                    } else {
-                        resolve({ success: false, error: 'Ação não reconhecida' });
-                    }
-                }, 300);
-            });
-
-            // Se você quiser o código real:
-            /*
-            const url = SCRIPT_URL + `?action=${action}`;
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                return response.json();
-            } catch (error) {
-                throw new Error('Falha na comunicação com o servidor (Apps Script).');
+ async function api(action, payload = {}, isRetry = false) {
+    // SIMULAÇÃO DA CHAMADA API COM RESPOSTA LOCAL PARA PREVENIR ERROS DE FALTA DE BACKEND.
+    /*
+    return new Promise(resolve => {
+        setTimeout(() => {
+            if (action === 'listAll') {
+                // Simula retorno dos dados locais
+                resolve({ success: true, transactions, investments, recurring, goals });
+            } else if (action === 'ping') {
+                 resolve({ success: true, message: 'Pong!' });
+            } else if (action.startsWith('create') || action.startsWith('edit') || action.startsWith('delete')) {
+                // Simulação de sucesso para operações CRUD
+                resolve({ success: true, message: 'Operação simulada com sucesso' });
+            } else {
+                resolve({ success: false, error: 'Ação não reconhecida' });
             }
-            */
-        }
+        }, 300);
+    });
+    */
+
+    // Código REAL para comunicação com o Google Apps Script
+    const url = SCRIPT_URL + `?action=${action}`;
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        return response.json();
+    } catch (error) {
+        throw new Error('Falha na comunicação com o servidor (Apps Script).');
+    }
+}
         
         async function syncWithServer() {
             if (!isOnline) return;
