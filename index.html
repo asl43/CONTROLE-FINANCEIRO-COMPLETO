@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Gerenciador Financeiro Elegante</title>
+    <title>Gerenciador Financeiro Elegante V2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         
@@ -166,7 +167,7 @@
         
         .grid-3 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
         }
 
@@ -392,7 +393,7 @@
         /* STATS CARDS */
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Mais compacto */
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -426,11 +427,35 @@
         }
         
         .stat-value {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 800;
             color: #1f2937;
         }
-        
+
+        /* GRÁFICOS */
+        .chart-container {
+            padding: 20px;
+            background: var(--card);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            max-width: 100%;
+        }
+
+        /* PESQUISA */
+        .searchbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .searchbar input, .searchbar select {
+            flex: 1;
+            margin-bottom: 0;
+            min-width: 120px;
+        }
+
         /* ITENS DE LISTA (Investimentos/Recorrentes) */
         .investment-item {
             background: var(--card);
@@ -492,19 +517,6 @@
         .detail-value {
             font-weight: 600;
             color: #1f2937;
-        }
-
-        /* PESQUISA */
-        .searchbar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-
-        .searchbar input, .searchbar select {
-            flex: 1;
-            margin-bottom: 0;
         }
         
         /* NOTIFICAÇÃO */
@@ -572,11 +584,11 @@
             h1 { font-size: 24px; }
             .header-content { padding: 15px; }
             .container { padding: 0 15px; }
-            .stats { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
             .grid-3 { grid-template-columns: 1fr; }
             .row { flex-direction: column; gap: 0; }
             .searchbar { flex-direction: column; }
-            .searchbar input, .searchbar button { width: 100%; }
+            .searchbar input, .searchbar button, .searchbar select { width: 100%; }
             .tab { font-size: 14px; padding: 10px 15px; }
         }
     </style>
@@ -608,9 +620,9 @@
     <main class="container">
         <div class="tab-content active" id="transactions">
             <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-label">Total Registros</div>
-                    <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-card purple">
+                    <div class="stat-label">Saldo TOTAL (Acumulado)</div>
+                    <div class="stat-value" id="statTotalBalance">R$ 0,00</div>
                 </div>
                 <div class="stat-card green">
                     <div class="stat-label">Recebimentos (Mês)</div>
@@ -620,7 +632,7 @@
                     <div class="stat-label">Saídas (Mês)</div>
                     <div class="stat-value" id="statSpent">R$ 0,00</div>
                 </div>
-                <div class="stat-card purple">
+                <div class="stat-card">
                     <div class="stat-label">Saldo (Mês)</div>
                     <div class="stat-value" id="statBalance">R$ 0,00</div>
                 </div>
@@ -645,7 +657,18 @@
                             </div>
                             <div>
                                 <label>Categoria</label>
-                                <input type="text" id="txCategory" placeholder="Ex: Alimentação" />
+                                <select id="txCategory" required>
+                                    <option value="">Selecione a Categoria</option>
+                                    <option value="Alimentação">🍽️ Alimentação</option>
+                                    <option value="Moradia">🏠 Moradia (Aluguel, Conta)</option>
+                                    <option value="Transporte">🚗 Transporte (Combustível, App)</option>
+                                    <option value="Saúde">⚕️ Saúde</option>
+                                    <option value="Educação">📚 Educação</option>
+                                    <option value="Lazer">🎉 Lazer/Entretenimento</option>
+                                    <option value="Investimentos">📈 Investimentos</option>
+                                    <option value="Salário">💵 Salário/Renda Principal</option>
+                                    <option value="Outros">📌 Outros</option>
+                                </select>
                             </div>
                         </div>
                         <label>Data e Hora</label>
@@ -659,7 +682,13 @@
                 <aside class="card">
                     <h3>📋 Histórico de Transações</h3>
                     <div class="searchbar">
-                        <input type="text" id="txSearch" placeholder="Buscar por descrição/categoria" />
+                        <input type="text" id="txSearch" placeholder="Buscar por descrição" />
+                        <select id="txTypeFilter">
+                            <option value="">Todos os Tipos</option>
+                            <option value="Compra">🛒 Compra</option>
+                            <option value="Pagamento">💳 Pagamento</option>
+                            <option value="Recebimento">💰 Recebimento</option>
+                        </select>
                         <input type="date" id="txFromDate" />
                         <input type="date" id="txToDate" />
                     </div>
@@ -808,7 +837,11 @@
                     </form>
                 </section>
                 <aside class="card">
-                    <h3>💸 Lista de Rendas</h3>
+                    <h3>💸 Próximos Pagamentos (30 dias)</h3>
+                    <div class="list" id="recUpcomingList">
+                        <div id="recUpcomingEmptyState"></div>
+                    </div>
+                    <h3 style="margin-top:25px;">💸 Todas as Rendas</h3>
                     <div class="list" id="recList">
                         <div id="recEmptyState"></div>
                     </div>
@@ -817,11 +850,12 @@
         </div>
         <div class="tab-content" id="dashboard">
             <h2 style="margin-bottom:20px; color:var(--accent-dark); font-weight:700;">✨ Visão Geral Completa</h2>
+            
             <div class="grid-3">
                 <div class="card">
-                    <h3>💳 Resumo Transações</h3>
+                    <h3>💳 Resumo Financeiro (Total)</h3>
                     <div class="stat-card" style="border:none; border-left:4px solid var(--purple); box-shadow:none; padding:10px 0;">
-                        <div class="stat-label">Saldo (Geral)</div>
+                        <div class="stat-label">Saldo Acumulado</div>
                         <div class="stat-value" id="dashTxBalance">R$ 0,00</div>
                     </div>
                     <div class="stat-card green" style="border:none; border-left:4px solid var(--success); box-shadow:none; padding:10px 0;">
@@ -834,18 +868,18 @@
                     </div>
                 </div>
                 <div class="card">
-                    <h3>📈 Resumo Investimentos</h3>
+                    <h3>📈 Resumo Investimentos/Renda</h3>
                     <div class="stat-card" style="border:none; border-left:4px solid var(--accent); box-shadow:none; padding:10px 0;">
-                        <div class="stat-label">Patrimônio Total</div>
+                        <div class="stat-label">Patrimônio Investido</div>
                         <div class="stat-value" id="dashInvTotal">R$ 0,00</div>
                     </div>
                     <div class="stat-card" style="border:none; border-left:4px solid var(--purple); box-shadow:none; padding:10px 0;">
-                        <div class="stat-label">Ativos na Carteira</div>
-                        <div class="stat-value" id="dashInvCount" style="font-size: 20px;">0</div>
-                    </div>
-                    <div class="stat-card" style="border:none; border-left:4px solid var(--success); box-shadow:none; padding:10px 0;">
-                        <div class="stat-label">Renda Passiva Mensal</div>
+                        <div class="stat-label">Renda Passiva Mensal Proj.</div>
                         <div class="stat-value" id="dashRecMonthly" style="font-size: 20px;">R$ 0,00</div>
+                    </div>
+                    <div class="stat-card" style="border:none; border-left:4px solid var(--warning); box-shadow:none; padding:10px 0;">
+                        <div class="stat-label">Rendas Recorrentes Cadastradas</div>
+                        <div class="stat-value" id="dashRecCount" style="font-size: 20px;">0</div>
                     </div>
                 </div>
                 <div class="card">
@@ -855,6 +889,18 @@
                     </div>
                 </div>
             </div>
+
+            <h2 style="margin-top:30px; margin-bottom:20px; color:var(--accent-dark); font-weight:700;">Gráficos Financeiros </h2>
+            <div class="grid-3">
+                <div class="chart-container" style="min-height: 400px;">
+                    <h3 style="margin-top:0; margin-bottom:15px;">Gastos por Categoria (Total)</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="chart-container" style="grid-column: span 2; min-height: 400px;">
+                    <h3 style="margin-top:0; margin-bottom:15px;">Receitas vs Despesas (Últimos 6 Meses)</h3>
+                    <canvas id="monthlyFlowChart"></canvas>
+                </div>
+            </div>
         </div>
     </main>
     <div class="notification" id="notification">
@@ -862,7 +908,7 @@
     </div>
     <script>
         // COLOQUE AQUI O URL DO SEU GOOGLE APPS SCRIPT
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyR8Ad-F9_T4US6JuGZvdRxtIZtZWI2SDJcdQJcDidtOZWhgAUXQKJ2AxkNikANu3AxOw/exec'; // *** SUBSTITUA ESTE URL! ***
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxOf-hJKft87ZSyB6gWbHqP9hONOKO8PFN8iHe6xS6s10ac1Ugm7VrqBRhb3G6Ve2Q7Uw/exec'; // *** SUBSTITUA ESTE URL! ***
         
         const STORAGE_TRANSACTIONS = 'financeTransactions_v2';
         const STORAGE_INVESTMENTS = 'financeInvestments_v2';
@@ -885,7 +931,13 @@
         let investments = [];
         let recurring = [];
         let pendingOperations = [];
-        let currentTab = 'transactions';
+        let categoryChartInstance;
+        let monthlyFlowChartInstance;
+
+        // Paleta de cores para os gráficos
+        const CHART_COLORS = [
+            '#4c7cff', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#34d399', '#6366f1'
+        ];
 
         function init() {
             loadFromLocalStorage();
@@ -902,6 +954,8 @@
             if (isOnline) syncWithServer();
         }
 
+        // --- Funções de Sincronização e Armazenamento (Mantidas) ---
+
         function setupTabs() {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -910,12 +964,11 @@
                     tab.classList.add('active');
                     const tabId = tab.dataset.tab;
                     document.getElementById(tabId).classList.add('active');
-                    currentTab = tabId;
                     if (tabId === 'dashboard') updateDashboard();
                 });
             });
         }
-
+        
         function loadFromLocalStorage() {
             try {
                 transactions = JSON.parse(localStorage.getItem(STORAGE_TRANSACTIONS) || '[]');
@@ -939,7 +992,7 @@
                 showNotification('⚠️ Erro ao salvar localmente', 'warning');
             }
         }
-
+        
         function updateConnectionStatus() {
             isOnline = navigator.onLine;
             if (isOnline) {
@@ -954,6 +1007,8 @@
                 btnManualSync.style.display = 'none';
             }
         }
+        
+        // ... (Funções handleOnline, handleOffline, updatePendingIndicator, api, syncWithServer, processPendingOperations, autoSync, generateId, escapeHtml, capitalize, showNotification, addData, editData, deleteData, getCollectionArray, getPendingStatus, renderAll mantidas, omitidas aqui por brevidade) ...
 
         function handleOnline() {
             isOnline = true;
@@ -1091,17 +1146,14 @@
         }
 
         async function addData(collection, data) {
-            const action = `create${capitalize(collection).slice(0, -1)}`; // Ex: createTransaction
+            const action = `create${capitalize(collection).slice(0, -1)}`; 
             
-            // 1. Prepara dados locais e server
             data.id = generateId();
             const collectionArray = getCollectionArray(collection);
             collectionArray.push(data);
 
-            // 2. Armazena operação pendente
             pendingOperations.push({ action, payload: data, collection, id: data.id });
             
-            // 3. Salva, renderiza, notifica
             saveToLocalStorage();
             renderAll();
             updateDashboard();
@@ -1109,11 +1161,9 @@
 
             showNotification('💾 Salvo localmente. Sincronizando...', 'info');
 
-            // 4. Tenta sincronizar
             try {
                 const result = await api(action, data);
                 if (result.success) {
-                    // Remove apenas a operação de CREATE com o ID
                     pendingOperations = pendingOperations.filter(op => op.id !== data.id || op.action !== action);
                     saveToLocalStorage();
                     updatePendingIndicator();
@@ -1135,22 +1185,17 @@
             
             if (index === -1) return;
 
-            // 1. Atualiza dados locais
             collectionArray[index] = { ...collectionArray[index], ...updatedData, id };
             
-            // 2. Armazena operação pendente
-            // Remove operações pendentes de CREATE ou EDIT para o mesmo ID para evitar conflito
             pendingOperations = pendingOperations.filter(op => op.id !== id || op.action.startsWith('delete'));
             pendingOperations.push({ action, payload: collectionArray[index], collection, id });
 
-            // 3. Salva, renderiza, notifica
             saveToLocalStorage();
             renderAll();
             updateDashboard();
             updatePendingIndicator();
             showNotification('🔄 Editado localmente. Sincronizando...', 'info');
 
-            // 4. Tenta sincronizar
             try {
                 const result = await api(action, collectionArray[index]);
                 if (result.success) {
@@ -1177,21 +1222,17 @@
             
             if (index === -1) return;
 
-            // 1. Remove dados locais
             collectionArray.splice(index, 1);
 
-            // 2. Armazena operação pendente (e remove creates/edits anteriores)
             pendingOperations = pendingOperations.filter(op => op.id !== id);
             pendingOperations.push({ action, payload: { id }, collection, id });
 
-            // 3. Salva, renderiza, notifica
             saveToLocalStorage();
             renderAll();
             updateDashboard();
             updatePendingIndicator();
             showNotification('🗑️ Excluído localmente. Sincronizando...', 'info');
 
-            // 4. Tenta sincronizar
             try {
                 const result = await api(action, { id });
                 if (result.success) {
@@ -1227,6 +1268,7 @@
             renderInvestments();
             renderRecurringStats();
             renderRecurring();
+            renderUpcomingRecurring();
         }
 
         // --- Funções Auxiliares para Datas e Cálculos ---
@@ -1244,7 +1286,9 @@
             const spent = currentMonthTxs.filter(t => t.tipo !== 'Recebimento').reduce((sum, t) => sum + Math.abs(t.valor), 0);
             const balance = received - spent;
             
-            return { received, spent, balance };
+            const totalBalance = list.reduce((sum, t) => sum + t.valor, 0);
+            
+            return { received, spent, balance, totalBalance };
         }
         
         function getEmptyState(targetId, icon, title, subtitle) {
@@ -1260,9 +1304,9 @@
         // --- TRANSAÇÕES (Tx) ---
 
         function renderTransactionStats() {
-            const { received, spent, balance } = calculateMonthlyStats(transactions);
+            const { received, spent, balance, totalBalance } = calculateMonthlyStats(transactions);
             
-            document.getElementById('statTotal').textContent = transactions.length;
+            document.getElementById('statTotalBalance').textContent = fmt.format(totalBalance);
             document.getElementById('statReceived').textContent = fmt.format(received);
             document.getElementById('statSpent').textContent = fmt.format(spent);
             document.getElementById('statBalance').textContent = fmt.format(balance);
@@ -1271,14 +1315,13 @@
         function renderTransactions(filteredList = transactions) {
             const tbody = txTableBody;
             tbody.innerHTML = '';
-            document.getElementById('txEmptyState').innerHTML = ''; // Limpa o estado vazio
+            document.getElementById('txEmptyState').innerHTML = ''; 
 
             if (filteredList.length === 0) {
                 getEmptyState('txEmptyState', '💸', 'Nenhuma transação encontrada.', 'Tente ajustar o filtro ou adicione um novo movimento.');
                 return;
             }
 
-            // Garante que a tabela está visível (se for o primeiro render)
             document.getElementById('txList').querySelector('table').style.display = 'table';
 
             filteredList.sort((a, b) => new Date(b.datahora) - new Date(a.datahora)).forEach(tx => {
@@ -1287,7 +1330,7 @@
                 const isPending = getPendingStatus(tx.id, 'create') || getPendingStatus(tx.id, 'edit');
                 const isDeleted = getPendingStatus(tx.id, 'delete');
                 
-                if (isDeleted) return; // Não renderiza se a exclusão estiver pendente
+                if (isDeleted) return;
                 
                 const row = tbody.insertRow();
                 if (isPending) row.classList.add('pending-row');
@@ -1369,6 +1412,7 @@
             let fromDate = document.getElementById('txFromDate').value;
             let toDate = document.getElementById('txToDate').value;
             const search = document.getElementById('txSearch').value.toLowerCase();
+            const typeFilter = document.getElementById('txTypeFilter').value;
             const now = new Date();
 
             if (period === 'today') {
@@ -1388,8 +1432,9 @@
             const filtered = transactions.filter(tx => {
                 const txDate = tx.datahora.split('T')[0];
                 const matchesSearch = !search || tx.descricao.toLowerCase().includes(search) || tx.categoria.toLowerCase().includes(search);
+                const matchesType = !typeFilter || tx.tipo === typeFilter;
                 const matchesDate = (!fromDate || txDate >= fromDate) && (!toDate || txDate <= toDate);
-                return matchesSearch && matchesDate;
+                return matchesSearch && matchesDate && matchesType;
             });
 
             renderTransactions(filtered);
@@ -1417,7 +1462,8 @@
         }
 
         // --- INVESTIMENTOS (Inv) ---
-
+        // (Mantidas as funções renderInvestmentStats, renderInvestments, setupInvestments, calculateInvTotal, clearInvestmentForm, editInvestment, handleInvestmentSubmit)
+        
         function renderInvestmentStats() {
             const totalInvested = investments.reduce((sum, inv) => sum + (inv.quantidade * inv.precomedio), 0);
             const totalFii = investments.filter(inv => inv.tipo === 'FII').reduce((sum, inv) => sum + (inv.quantidade * inv.precomedio), 0);
@@ -1485,7 +1531,7 @@
             const qty = parseFloat(document.getElementById('invQuantity').value) || 0;
             const price = parseFloat(document.getElementById('invPrice').value) || 0;
             const total = qty * price;
-            document.getElementById('invTotal').value = fmt.format(total).replace('R$', '').trim(); // Remove R$ para mostrar só o número
+            document.getElementById('invTotal').value = fmt.format(total).replace('R$', '').trim(); 
         }
 
         function clearInvestmentForm() {
@@ -1532,6 +1578,7 @@
         }
 
         // --- RECORRENTES (Rec) ---
+        // (Mantidas as funções calculateRecurringProjection, renderRecurringStats, setupRecurring, clearRecurringForm, editRecurring, handleRecurringSubmit)
 
         function calculateRecurringProjection(list) {
             let monthly = 0;
@@ -1594,6 +1641,47 @@
                 listDiv.insertAdjacentHTML('beforeend', itemHtml);
             });
         }
+        
+        function renderUpcomingRecurring() {
+            const listDiv = document.getElementById('recUpcomingList');
+            listDiv.innerHTML = '';
+            document.getElementById('recUpcomingEmptyState').innerHTML = '';
+
+            const today = new Date();
+            const thirtyDays = new Date();
+            thirtyDays.setDate(today.getDate() + 30);
+
+            const upcoming = recurring.filter(rec => {
+                if (!rec.proximopagamento) return false;
+                const nextDate = new Date(rec.proximopagamento);
+                return nextDate >= today && nextDate <= thirtyDays;
+            }).sort((a, b) => new Date(a.proximopagamento) - new Date(b.proximopagamento));
+
+            if (upcoming.length === 0) {
+                getEmptyState('recUpcomingEmptyState', '😌', 'Nenhum pagamento nos próximos 30 dias.', 'Tudo tranquilo.');
+                return;
+            }
+
+            upcoming.forEach(rec => {
+                const itemHtml = `
+                    <div class="investment-item" style="border-left: 4px solid var(--success); padding: 12px 20px;">
+                        <div class="investment-header" style="margin-bottom: 0;">
+                            <div style="display:flex; flex-direction:column; align-items:flex-start;">
+                                <div class="investment-name" style="font-size: 16px;">
+                                    ${escapeHtml(rec.nome)} 
+                                    <span class="pill ${rec.frequencia}" style="font-size: 10px; margin-left: 5px;">${escapeHtml(rec.frequencia)}</span>
+                                </div>
+                                <div style="font-size: 12px; color: var(--muted); margin-top: 2px;">
+                                    Próx. Data: <strong style="color:var(--purple);">${rec.proximopagamento}</strong>
+                                </div>
+                            </div>
+                            <div class="investment-value" style="font-size: 18px; color: var(--success);">${fmt.format(rec.valor)}</div>
+                        </div>
+                    </div>
+                `;
+                listDiv.insertAdjacentHTML('beforeend', itemHtml);
+            });
+        }
 
         function setupRecurring() {
             document.getElementById('recurringForm').addEventListener('submit', handleRecurringSubmit);
@@ -1641,62 +1729,62 @@
             clearRecurringForm();
         }
 
-        // --- DASHBOARD (Dash) ---
+        // --- DASHBOARD (Dash) e GRÁFICOS ---
 
         function updateDashboard() {
-            // Transações
+            // Transações Totais
             const dashTxIn = transactions.filter(t => t.tipo === 'Recebimento').reduce((sum, t) => sum + t.valor, 0);
-            const dashTxOut = transactions.filter(t => t.tipo !== 'Recebimento').reduce((sum, t) => sum + Math.abs(t.valor), 0);
+            const dashTxOut = transactions.filter(t => t.valor < 0).reduce((sum, t) => sum + Math.abs(t.valor), 0);
             const dashTxBalance = dashTxIn - dashTxOut;
 
             document.getElementById('dashTxIn').textContent = fmt.format(dashTxIn);
             document.getElementById('dashTxOut').textContent = fmt.format(dashTxOut);
             document.getElementById('dashTxBalance').textContent = fmt.format(dashTxBalance);
 
-            // Investimentos
+            // Investimentos/Recorrentes
             const totalInvested = investments.reduce((sum, inv) => sum + (inv.quantidade * inv.precomedio), 0);
-            document.getElementById('dashInvTotal').textContent = fmt.format(totalInvested);
-            document.getElementById('dashInvCount').textContent = investments.length;
-
-            // Rendas Recorrentes
             const { monthly } = calculateRecurringProjection(recurring);
+            
+            document.getElementById('dashInvTotal').textContent = fmt.format(totalInvested);
             document.getElementById('dashRecMonthly').textContent = fmt.format(monthly);
-            document.getElementById('dashRecYearly').textContent = fmt.format(monthly * 12);
+            document.getElementById('dashRecCount').textContent = recurring.length;
 
-            // Insights
+            renderCategoryChart(transactions);
+            renderMonthlyFlowChart(transactions);
+            renderInsights(dashTxBalance, totalInvested, monthly);
+        }
+        
+        function renderInsights(balance, totalInv, monthlyRec) {
             const insightsDiv = document.getElementById('insights');
             let insightHtml = '<ul>';
             let hasInsights = false;
 
-            if (dashTxIn > 0 || dashTxOut > 0) {
-                const balanceDiff = dashTxIn - dashTxOut;
-                if (balanceDiff > 0) {
-                    insightHtml += `<li>🎉 Seu saldo geral é positivo em **${fmt.format(balanceDiff)}**. Continue assim!</li>`;
-                    hasInsights = true;
-                } else if (balanceDiff < 0) {
-                    insightHtml += `<li>🚨 Você está com saldo negativo em **${fmt.format(Math.abs(balanceDiff))}** no total. Revise seus gastos.</li>`;
-                    hasInsights = true;
-                }
-                
-                const expenseCategories = transactions.filter(t => t.valor < 0).reduce((acc, t) => {
-                    const cat = t.categoria || 'Outros';
-                    acc[cat] = (acc[cat] || 0) + Math.abs(t.valor);
-                    return acc;
-                }, {});
-                
-                const topExpense = Object.entries(expenseCategories).sort(([, a], [, b]) => b - a)[0];
-                if (topExpense) {
-                    insightHtml += `<li>⚠️ Sua maior despesa histórica é em **${topExpense[0]}** (${fmt.format(topExpense[1])}).</li>`;
-                    hasInsights = true;
-                }
-            }
-
-            if (totalInvested > 0) {
-                insightHtml += `<li>📈 Seu patrimônio total investido é de **${fmt.format(totalInvested)}** em ${investments.length} ativos.</li>`;
+            if (balance > 0) {
+                insightHtml += `<li>🎉 Seu **Saldo Acumulado** é positivo em **${fmt.format(balance)}**. Excelente gestão!</li>`;
+                hasInsights = true;
+            } else if (balance < 0) {
+                insightHtml += `<li>🚨 Você está com **Saldo Negativo** em **${fmt.format(Math.abs(balance))}**. Revise os gastos.</li>`;
                 hasInsights = true;
             }
-            if (monthly > 0) {
-                insightHtml += `<li>💸 Sua renda passiva projetada é de **${fmt.format(monthly)}** por mês, totalizando **${fmt.format(monthly * 12)}** por ano.</li>`;
+                
+            const expenseCategories = transactions.filter(t => t.valor < 0).reduce((acc, t) => {
+                const cat = t.categoria || 'Outros';
+                acc[cat] = (acc[cat] || 0) + Math.abs(t.valor);
+                return acc;
+            }, {});
+                
+            const topExpense = Object.entries(expenseCategories).sort(([, a], [, b]) => b - a)[0];
+            if (topExpense) {
+                insightHtml += `<li>⚠️ Sua maior despesa histórica é em **${topExpense[0]}** (${fmt.format(topExpense[1])}). Fique de olho!</li>`;
+                hasInsights = true;
+            }
+
+            if (totalInv > 0) {
+                insightHtml += `<li>📈 Seu patrimônio investido é de **${fmt.format(totalInv)}** em ${investments.length} ativos.</li>`;
+                hasInsights = true;
+            }
+            if (monthlyRec > 0) {
+                insightHtml += `<li>💸 Sua **Renda Passiva Mensal** projetada é de **${fmt.format(monthlyRec)}**.</li>`;
                 hasInsights = true;
             }
 
@@ -1705,8 +1793,136 @@
             if (!hasInsights) {
                 insightsDiv.innerHTML = '<p class="muted">Adicione transações, investimentos e rendas para ver insights personalizados.</p>';
             } else {
-                insightsDiv.innerHTML = insightHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Formatação básica de negrito
+                insightsDiv.innerHTML = insightHtml.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
             }
+        }
+
+        // --- GRÁFICOS (Chart.js) ---
+
+        function renderCategoryChart(data) {
+            if (categoryChartInstance) categoryChartInstance.destroy();
+
+            // Filtrar apenas despesas (valor < 0)
+            const expenses = data.filter(t => t.valor < 0);
+            const categoryData = expenses.reduce((acc, t) => {
+                const cat = t.categoria || 'Outros';
+                acc[cat] = (acc[cat] || 0) + Math.abs(t.valor);
+                return acc;
+            }, {});
+
+            const labels = Object.keys(categoryData);
+            const values = Object.values(categoryData);
+
+            if (values.length === 0) {
+                document.getElementById('categoryChart').style.display = 'none';
+                return;
+            }
+            document.getElementById('categoryChart').style.display = 'block';
+
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            categoryChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: CHART_COLORS.slice(0, labels.length),
+                        borderColor: 'var(--card)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: (context) => {
+                            let label = context.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed !== null) label += fmt.format(context.parsed);
+                            return label;
+                        }}}
+                    }
+                }
+            });
+        }
+
+        function renderMonthlyFlowChart(data) {
+            if (monthlyFlowChartInstance) monthlyFlowChartInstance.destroy();
+
+            const monthlyData = {};
+            const today = new Date();
+            
+            // Inicializar os últimos 6 meses (excluindo o atual)
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const monthYear = date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+                monthlyData[monthYear] = { receita: 0, despesa: 0 };
+            }
+
+            // Agrupar dados
+            data.forEach(t => {
+                const date = new Date(t.datahora);
+                const monthYear = date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+
+                if (monthlyData[monthYear]) {
+                    if (t.tipo === 'Recebimento') {
+                        monthlyData[monthYear].receita += t.valor;
+                    } else {
+                        monthlyData[monthYear].despesa += Math.abs(t.valor);
+                    }
+                }
+            });
+
+            const labels = Object.keys(monthlyData);
+            const receitas = labels.map(label => monthlyData[label].receita);
+            const despesas = labels.map(label => monthlyData[label].despesa);
+
+            if (labels.length === 0) {
+                document.getElementById('monthlyFlowChart').style.display = 'none';
+                return;
+            }
+            document.getElementById('monthlyFlowChart').style.display = 'block';
+
+            const ctx = document.getElementById('monthlyFlowChart').getContext('2d');
+            monthlyFlowChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Receitas',
+                            data: receitas,
+                            backgroundColor: 'var(--success)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Despesas',
+                            data: despesas,
+                            backgroundColor: 'var(--danger)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: (value) => fmt.format(value) }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { callbacks: { label: (context) => {
+                            let label = context.dataset.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed.y !== null) label += fmt.format(context.parsed.y);
+                            return label;
+                        }}}
+                    }
+                }
+            });
         }
 
 
